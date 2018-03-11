@@ -138,6 +138,7 @@ class PinterestAPI:
                 image_url = self.get_image_url_from_pin_url(imageData["url"])
                 self.save_image(image_url, i)
             logging.info('pins saved successfully!')
+            
         except Exception as e:
             logging.error(traceback.format_exc())
                 
@@ -157,5 +158,6 @@ class PinterestAPI:
                 image_url = self.get_image_url_from_pin_url(imageData)
                 self.save_image(image_url, i)
             logging.info('pins saved successfully!')
+
         except Exception as e:
             logging.error(traceback.format_exc())
