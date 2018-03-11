@@ -1,0 +1,4 @@
+tqdm
+requests
+selenium
+bs4
