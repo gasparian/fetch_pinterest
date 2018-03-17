@@ -28,9 +28,9 @@ logging.basicConfig(level=logging.DEBUG,
             format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
             datefmt='%Y-%m-%d %H:%M:%S',
             handlers=[logging.FileHandler('./logfile.log'), TqdmLoggingHandler()])
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-logging.getLogger("selenium").setLevel(logging.WARNING)
+
+for name in ["requests", "urllib3", "selenium"]:
+    logging.getLogger(name).setLevel(logging.WARNING)
 
 def get_search_result(config):
     try:
@@ -46,6 +46,7 @@ def get_search_result(config):
         time.sleep(3)
         logging.info('url opened')
 
+        #search for log in button
         elem = driver.find_element_by_xpath('/html/body/div[1]/div/div[1]/div/div[3]/div/div[2]/div[2]/button')
         elem.click()
         time.sleep(3)
@@ -60,6 +61,7 @@ def get_search_result(config):
         logging.info('logged in')
 
         time.sleep(5)
+        #search for search input
         elem = driver.find_element_by_xpath('/html/body/div[1]/div/div[1]/div/div/div/div[2]/div[1]/div/div[2]/div/div/div[2]/div/div/div/div/div[1]/div[2]/input')
         elem.send_keys(config.query)
         time.sleep(3)
@@ -103,13 +105,17 @@ def get_search_result(config):
         logging.info('pins list saved!')
 
     except Exception as e:
-        driver.close()
+        try:
+            driver.close()
+        except:
+            pass
         logging.error(traceback.format_exc())
 
 class PinterestAPI:
-    def __init__(self, path=None, access_token=None):
+    def __init__(self, path=None, access_token=None, timeout=30):
         self.path = path
-        self.access_token = access_token 
+        self.access_token = access_token
+        self.timeout = timeout
 
         if not os.path.isdir(self.path):
             os.makedirs(self.path)
@@ -120,7 +126,7 @@ class PinterestAPI:
             saved_image_path = urlretrieve(url, "{}/{}.{}".format(self.path, str(i), extension))
 
     def get_image_url_from_pin_url(self, url):
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=self.timeout)
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
             images = [x['src'] for x in soup.findAll('img')]
@@ -128,10 +134,10 @@ class PinterestAPI:
                 return images[0]
             return False
     
-    def get_pins_from_board(self, boardId):
+    def get_pins_from_board(self, board_id):
         logging.info('boards crawling started...')
         try:
-            response = requests.get('https://api.pinterest.com/v1/boards/'+boardId+'/pins/', timeout=15,
+            response = requests.get('https://api.pinterest.com/v1/boards/'+board_id+'/pins/', timeout=self.timeout,
                                     params={'access_token':self.access_token, 'page_size':10e6})
             imageDatas = response.json()['data']
             for i, imageData in enumerate(tqdm.tqdm(imageDatas)):
@@ -150,7 +156,7 @@ class PinterestAPI:
 
             for i, pin in enumerate(tqdm.tqdm(pins_list)):
                 try:
-                    response = requests.get('https://api.pinterest.com/v1/pins/'+pin.split('/')[-2], timeout=15,
+                    response = requests.get('https://api.pinterest.com/v1/pins/'+pin.split('/')[-2], timeout=self.timeout,
                                             params={'access_token':self.access_token})
                 except:
                     pass
