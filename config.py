@@ -8,6 +8,6 @@ headless_mode = True
 timeout = 30
 
 #download config
-accessToken = "000000000000000000000000000000000"
+access_token = "000000000000000000000000000000000"
 boardId = []
-folderPath = "./data/pinterest_images"
+folder_path = "./data/pinterest_images"
